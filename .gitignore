@@ -1,3 +1,6 @@
+debug_screenshots/
+results.txt
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

@@ -1,14 +1,23 @@
 from pathlib import Path
+import sys
 import pyautogui
 
-# =========================
-# 路径配置
-# =========================
+
+def get_base_dir() -> Path:
+    if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
+        return Path(sys._MEIPASS)
+    return Path(__file__).resolve().parent
+
+
+BASE_DIR = get_base_dir()
+
 RESULTS_FILE = Path("results.txt")
 FAILED_CODES_FILE = Path("failed_codes.txt")
-TEMPLATE_DIR = Path("templates")
+
+TEMPLATE_DIR = BASE_DIR / "templates"
 DEBUG_DIR = Path("debug_screenshots")
 TEMPLATE_BACKUP_DIR = Path("template_backups")
+
 
 TEMPLATE_PATHS = {
     "input_box": TEMPLATE_DIR / "input_box.png",

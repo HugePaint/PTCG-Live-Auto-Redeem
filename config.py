@@ -28,6 +28,7 @@ SUCCESS_IMG = TEMPLATE_PATHS["success"]
 RECAPTCHA_IMG = TEMPLATE_PATHS["recaptcha"]
 REDEEMED_IMG = TEMPLATE_PATHS["redeemed"]
 DUPLICATE_IMG = TEMPLATE_PATHS["duplicate"]
+ERROR_IMG = TEMPLATE_PATHS["error"]
 
 # =========================
 # 运行配置

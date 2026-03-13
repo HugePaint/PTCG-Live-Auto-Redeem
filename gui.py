@@ -303,7 +303,7 @@ class RedeemApp:
     def __init__(self, root: tk.Tk):
         self.root = root
         self.root.title("PTCGL Code Redeemer")
-        self.root.geometry("1100x760")
+        self.root.geometry("1200x760")
 
         self.stop_requested = False
         self.worker_thread = None
@@ -550,6 +550,8 @@ class RedeemApp:
                     status = "ERROR"
                     screenshot_path = save_debug_screenshot(code, "exception", region)
                     detail = f"脚本异常: {e} | 截图: {screenshot_path}"
+                    pyautogui.press("f5")
+                    time.sleep(8.0)
 
                 append_result(code, status, detail)
                 self.add_result_row(i, code, status, detail)

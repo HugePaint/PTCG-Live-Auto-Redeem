@@ -1,3 +1,4 @@
+import random
 import time
 from pathlib import Path
 
@@ -26,6 +27,8 @@ from config import (
     SUBMIT_BUTTON_IMG,
     SUCCESS_IMG,
     REDEEM_BUTTON_IMG,
+    RANDOM_DELAY_MAX,
+    RANDOM_DELAY_MIN,
 )
 
 
@@ -109,10 +112,16 @@ def locate_on_screen_optional(image_path: Path, region, confidence: float = CONF
         region=region,
     )
 
+def random_delay() -> None:
+    """生成一个范围内的随机延迟"""
+    delay = random.uniform(RANDOM_DELAY_MIN, RANDOM_DELAY_MAX)
+    time.sleep(delay)
+    return delay
 
 def click_image(image_path: Path, desc: str, region):
     pos = wait_and_locate_center(image_path, desc, region=region)
     pyautogui.click(pos.x, pos.y)
+    random_delay()
     return pos
 
 

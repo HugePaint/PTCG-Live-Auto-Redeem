@@ -1,6 +1,8 @@
 debug_screenshots/
-results.txt
 deprecated/
+template_backups/
+
+results.txt
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

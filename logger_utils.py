@@ -3,11 +3,12 @@ from pathlib import Path
 
 import pyautogui
 
-from config import RESULTS_FILE, DEBUG_DIR
+from config import RESULTS_FILE, DEBUG_DIR, TEMPLATE_BACKUP_DIR
 
 
 def ensure_dirs() -> None:
     DEBUG_DIR.mkdir(parents=True, exist_ok=True)
+    TEMPLATE_BACKUP_DIR.mkdir(parents=True, exist_ok=True)
 
 
 def append_result(code: str, status: str, detail: str = "") -> None:

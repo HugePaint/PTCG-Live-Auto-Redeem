@@ -7,16 +7,27 @@ import pyautogui
 RESULTS_FILE = Path("results.txt")
 TEMPLATE_DIR = Path("templates")
 DEBUG_DIR = Path("debug_screenshots")
+TEMPLATE_BACKUP_DIR = Path("template_backups")
 
-INPUT_BOX_IMG = TEMPLATE_DIR / "input_box.png"
-SUBMIT_BUTTON_IMG = TEMPLATE_DIR / "submit_button.png"
-REDEEM_BUTTON_IMG = TEMPLATE_DIR / "redeem_button.png"
+TEMPLATE_PATHS = {
+    "input_box": TEMPLATE_DIR / "input_box.png",
+    "submit_button": TEMPLATE_DIR / "submit_button.png",
+    "redeem_button": TEMPLATE_DIR / "redeem_button.png",
+    "success": TEMPLATE_DIR / "success.png",
+    "recaptcha": TEMPLATE_DIR / "recaptcha.png",
+    "redeemed": TEMPLATE_DIR / "redeemed.png",
+    "duplicate": TEMPLATE_DIR / "duplicate.png",
+    "error": TEMPLATE_DIR / "error.png",
+}
 
-SUCCESS_IMG = TEMPLATE_DIR / "success.png"
-RECAPTCHA_IMG = TEMPLATE_DIR / "recaptcha.png"
-REDEEMED_IMG = TEMPLATE_DIR / "redeemed.png"
-DUPLICATE_IMG = TEMPLATE_DIR / "duplicate.png"
-ERROR_IMG = TEMPLATE_DIR / "error.png"
+INPUT_BOX_IMG = TEMPLATE_PATHS["input_box"]
+SUBMIT_BUTTON_IMG = TEMPLATE_PATHS["submit_button"]
+REDEEM_BUTTON_IMG = TEMPLATE_PATHS["redeem_button"]
+
+SUCCESS_IMG = TEMPLATE_PATHS["success"]
+RECAPTCHA_IMG = TEMPLATE_PATHS["recaptcha"]
+REDEEMED_IMG = TEMPLATE_PATHS["redeemed"]
+DUPLICATE_IMG = TEMPLATE_PATHS["duplicate"]
 
 # =========================
 # 运行配置
@@ -34,7 +45,7 @@ STATUS_POLL_INTERVAL = 0.4
 
 AFTER_CLICK_WAIT = 0.4
 AFTER_PASTE_WAIT = 0.3
-AFTER_SUBMIT_WAIT = 1.2
+AFTER_SUBMIT_WAIT = 3.0
 AFTER_REDEEM_WAIT = 1.5
 
 REGION_PADDING_LEFT = 10

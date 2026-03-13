@@ -1,7 +1,7 @@
 debug_screenshots/
 deprecated/
 template_backups/
-
+failed_codes.txt
 results.txt
 
 # Byte-compiled / optimized / DLL files

@@ -5,6 +5,7 @@ import pyautogui
 # 路径配置
 # =========================
 RESULTS_FILE = Path("results.txt")
+FAILED_CODES_FILE = Path("failed_codes.txt")
 TEMPLATE_DIR = Path("templates")
 DEBUG_DIR = Path("debug_screenshots")
 TEMPLATE_BACKUP_DIR = Path("template_backups")
@@ -49,7 +50,7 @@ RANDOM_DELAY_MAX = 1.1
 
 AFTER_CLICK_WAIT = 0.4
 AFTER_PASTE_WAIT = 0.3
-AFTER_SUBMIT_WAIT = 3.0
+AFTER_SUBMIT_WAIT = 2.0
 AFTER_REDEEM_WAIT = 1.5
 
 REGION_PADDING_LEFT = 10

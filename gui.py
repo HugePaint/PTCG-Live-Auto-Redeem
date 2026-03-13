@@ -8,7 +8,7 @@ import pyautogui
 
 from automation import activate_window, get_browser_window, get_search_region, process_code
 from config import START_DELAY, WINDOW_TITLE_KEYWORD
-from logger_utils import append_result, ensure_dirs, save_debug_screenshot
+from logger_utils import append_failed_code, append_result, ensure_dirs, save_debug_screenshot
 from template_manager import TemplateManager
 
 
@@ -318,6 +318,27 @@ class RedeemApp:
 
         self.build_ui()
 
+    def remove_code_from_input(self, code: str):
+        """
+        从输入框中删除指定的一行 code
+        """
+        self.root.after(0, self._remove_code_from_input, code)
+
+    def _remove_code_from_input(self, code: str):
+        lines = self.code_text.get("1.0", tk.END).splitlines()
+
+        new_lines = []
+        removed = False
+
+        for line in lines:
+            if not removed and line.strip() == code:
+                removed = True
+                continue
+            new_lines.append(line)
+
+        self.code_text.delete("1.0", tk.END)
+        self.code_text.insert("1.0", "\n".join(new_lines))
+
     def build_ui(self):
         self.build_menu()
 
@@ -544,6 +565,7 @@ class RedeemApp:
                     self.log(detail)
                     self.add_result_row(i, code, status, detail)
                     append_result(code, status, detail)
+                    append_failed_code(code)
                     break
 
                 except Exception as e:
@@ -555,6 +577,16 @@ class RedeemApp:
 
                 append_result(code, status, detail)
                 self.add_result_row(i, code, status, detail)
+                
+                if status == "SUCCESS":
+                    self.remove_code_from_input(code)
+                else:
+                    is_new_failed = append_failed_code(code)
+                    if is_new_failed:
+                        self.log(f"[{i}/{len(codes)}] 已加入 failed_codes.txt: {code}")
+                    else:
+                        self.log(f"[{i}/{len(codes)}] failed_codes.txt 中已存在: {code}")
+                
                 self.log(f"[{i}/{len(codes)}] 完成: {code} -> {status}")
 
                 if self.stop_requested:

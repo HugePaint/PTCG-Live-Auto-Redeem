@@ -1,6 +1,6 @@
 import tkinter as tk
 
-from gui import RedeemApp
+from main_window import RedeemApp
 
 
 def main():

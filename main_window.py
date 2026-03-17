@@ -82,14 +82,19 @@ class RedeemApp:
         input_frame = ttk.LabelFrame(self.root, text="待兑换 Code（每行一个）", padding=10)
         input_frame.pack(fill="both", expand=False, padx=10, pady=(0, 10))
 
+        self.line_count_var = tk.StringVar(value="总数: 0")
+        ttk.Label(input_frame, textvariable=self.line_count_var).pack(side="top", anchor="w", padx=6)
+
         self.code_text = tk.Text(input_frame, height=10, wrap="none")
         self.code_text.pack(fill="both", expand=True)
+        self.code_text.bind("<<Modified>>", self.update_line_count)
+
 
         status_frame = ttk.Frame(self.root, padding=(10, 0, 10, 10))
         status_frame.pack(fill="x")
 
         self.summary_var = tk.StringVar(
-            value="总数: 0 | SUCCESS: 0 | RECAPTCHA: 0 | REDEEMED: 0 | DUPLICATE: 0 | ERROR: 0 | STOPPED: 0"
+            value="已兑换 TOTAL: 0 | SUCCESS: 0 | RECAPTCHA: 0 | REDEEMED: 0 | DUPLICATE: 0 | ERROR: 0 | STOPPED: 0"
         )
         ttk.Label(status_frame, textvariable=self.summary_var).pack(anchor="w")
 
@@ -172,7 +177,7 @@ class RedeemApp:
     def update_summary(self):
         total = sum(self.status_counts.values())
         text = (
-            f"总数: {total} | "
+            f"已兑换 TOTAL: {total} | "
             f"SUCCESS: {self.status_counts['SUCCESS']} | "
             f"RECAPTCHA: {self.status_counts['RECAPTCHA']} | "
             f"REDEEMED: {self.status_counts['REDEEMED']} | "
@@ -234,6 +239,13 @@ class RedeemApp:
             daemon=True,
         )
         self.worker_thread.start()
+
+    def update_line_count(self, event=None):
+        """更新行数实时统计"""
+        raw = self.code_text.get("1.0", tk.END)
+        lines = [line.strip() for line in raw.splitlines() if line.strip()]
+        self.line_count_var.set(f"行数: {len(lines)}")
+        self.code_text.edit_modified(False)  # 清除修改标记
 
     def run_redeem_task(self, codes: list[str], keyword: str, start_delay: float):
         ensure_dirs()

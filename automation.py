@@ -106,17 +106,24 @@ def wait_and_locate_center(
 
 def locate_on_screen_optional(image_path: Path, region, confidence: float = CONFIDENCE):
     if not image_path.exists():
+        if DEBUG_STATUS:
+            print(f"locate_on_screen_optional: 模板图片不存在: {image_path}")
         return None
     try:
         result = pyautogui.locateOnScreen(
             str(image_path),
+            minSearchTime=1.0,
             confidence=confidence,
             grayscale=False,
             region=region,
         )
         if result is not None:
+            if DEBUG_STATUS:
+                print(f"locate_on_screen_optional: 找到 {image_path}，位置: {result}")
             return result
     except pyautogui.ImageNotFoundException:
+        if DEBUG_STATUS:
+            print(f"locate_on_screen_optional: 在区域 {region} 内未找到: {image_path}")
         return None
     return None
 
@@ -182,7 +189,7 @@ def detect_submit_status(region) -> tuple[str, str]:
 
         time.sleep(STATUS_POLL_INTERVAL)
 
-    return "TIMEOUT", f"{STATUS_TIMEOUT} 秒内未识别到状态提示"
+    return "TIMEOUT", f"Submit 在 {STATUS_TIMEOUT} 秒内未识别到状态提示"
 
 def detect_redeem_status(region) -> tuple[str, str]:
     """
@@ -201,7 +208,7 @@ def detect_redeem_status(region) -> tuple[str, str]:
 
         time.sleep(STATUS_POLL_INTERVAL)
 
-    return "TIMEOUT", f"{STATUS_TIMEOUT} 秒内未识别到状态提示"
+    return "TIMEOUT", f"Redeem 在 {STATUS_TIMEOUT} 秒内未识别到状态提示"
 
 
 def process_code(code: str, index: int, total: int, region) -> tuple[str, str]:

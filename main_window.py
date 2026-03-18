@@ -5,6 +5,7 @@ from datetime import datetime
 from tkinter import messagebox, ttk
 
 import pyautogui
+import pyperclip
 
 from automation import activate_window, get_browser_window, get_search_region, process_code
 from config import ERROR_REFRESH_WAIT, MAIN_WINDOW_TITLE, START_DELAY, WINDOW_TITLE_KEYWORD
@@ -15,7 +16,7 @@ class RedeemApp:
     def __init__(self, root: tk.Tk):
         self.root = root
         self.root.title(MAIN_WINDOW_TITLE)
-        self.root.geometry("1000x760")
+        self.root.geometry("1200x760")
 
         self.stop_requested = False
         self.worker_thread = None
@@ -83,8 +84,24 @@ class RedeemApp:
         input_frame = ttk.LabelFrame(self.root, text="待兑换 Code（每行一个）", padding=10)
         input_frame.pack(fill="both", expand=False, padx=10, pady=(0, 10))
 
+        # self.line_count_var = tk.StringVar(value="总数: 0")
+        # ttk.Label(input_frame, textvariable=self.line_count_var).pack(side="top", anchor="w", padx=6)
+        # ttk.Button(input_frame, text="从剪贴板粘贴", command=self.paste_from_clipboard).pack(side="right", padx=(0, 6))
+        # ttk.Button(input_frame, text="复制全部", command=self.copy_all_codes).pack(side="right", padx=(0, 6))
+
+        # ===== 工具栏（行数统计 + 按钮）=====
+        input_toolbar = ttk.Frame(input_frame)
+        input_toolbar.pack(fill="x", pady=(0, 6))
+
         self.line_count_var = tk.StringVar(value="总数: 0")
-        ttk.Label(input_frame, textvariable=self.line_count_var).pack(side="top", anchor="w", padx=6)
+        ttk.Label(input_toolbar, textvariable=self.line_count_var).pack(side="left")
+
+        button_group = ttk.Frame(input_toolbar)
+        button_group.pack(side="right")
+
+        ttk.Button(button_group, text="清除全部", command=self.confirm_clear_all).pack(side="right", padx=(6, 0))
+        ttk.Button(button_group, text="复制全部", command=self.copy_all_codes).pack(side="right", padx=(6, 0))
+        ttk.Button(button_group, text="从剪贴板粘贴", command=self.paste_from_clipboard).pack(side="right")
 
         self.code_text = tk.Text(input_frame, height=10, wrap="none")
         self.code_text.pack(fill="both", expand=True)
@@ -119,7 +136,7 @@ class RedeemApp:
         self.tree.column("index", width=50, anchor="center")
         self.tree.column("code", width=260, anchor="w")
         self.tree.column("status", width=110, anchor="center")
-        self.tree.column("detail", width=420, anchor="w")
+        self.tree.column("detail", width=250, anchor="w")
         self.tree.column("time", width=160, anchor="center")
 
         tree_scroll = ttk.Scrollbar(table_frame, orient="vertical", command=self.tree.yview)
@@ -156,6 +173,36 @@ class RedeemApp:
         now = datetime.now().strftime("%H:%M:%S")
         full = f"[{now}] {message}\n"
         self.root.after(0, self._append_log, full)
+
+    def paste_from_clipboard(self):
+        code = self.get_clipboard_code()
+        if code:
+            self.code_text.insert(tk.END, code + "\n")
+            self.get_codes_from_input()  # 更新行数统计
+            self.log("已从剪贴板粘贴代码")
+        else:
+            messagebox.showwarning("错误", "剪贴板没有有效的代码")
+
+    def get_clipboard_code(self):
+        try:
+            return pyperclip.paste().strip()
+        except Exception as e:
+            messagebox.showerror("错误", f"无法读取剪贴板内容: {e}")
+            return None
+
+    def copy_all_codes(self):
+        codes = self.get_codes_from_input()
+        if codes:
+            pyperclip.copy("\n".join(codes))  # 将所有 code 复制到剪贴板
+            self.log("已将所有代码复制到剪贴板")
+        else:
+            messagebox.showwarning("错误", "待兑换区域没有有效代码")
+
+    def confirm_clear_all(self):
+        result = messagebox.askyesno("确认清除", "确定要清除所有输入的代码吗？")
+        if result:
+            self.code_text.delete("1.0", "end")
+            self.update_line_count()
 
     def _append_log(self, text: str):
         self.log_text.configure(state="normal")

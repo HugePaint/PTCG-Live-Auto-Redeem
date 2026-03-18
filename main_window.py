@@ -7,23 +7,24 @@ from tkinter import messagebox, ttk
 import pyautogui
 
 from automation import activate_window, get_browser_window, get_search_region, process_code
-from config import START_DELAY, WINDOW_TITLE_KEYWORD
+from config import ERROR_REFRESH_WAIT, MAIN_WINDOW_TITLE, START_DELAY, WINDOW_TITLE_KEYWORD
 from logger_utils import append_failed_code, append_result, ensure_dirs, save_debug_screenshot
 from template_debug_window import TemplateDebugWindow
 
 class RedeemApp:
     def __init__(self, root: tk.Tk):
         self.root = root
-        self.root.title("PTCGL Code Redeemer")
-        self.root.geometry("1200x760")
+        self.root.title(MAIN_WINDOW_TITLE)
+        self.root.geometry("1000x760")
 
         self.stop_requested = False
         self.worker_thread = None
         self.status_counts = {
             "SUCCESS": 0,
             "RECAPTCHA": 0,
-            "REDEEMED": 0,
             "DUPLICATE": 0,
+            "FAILED": 0,
+            "TIMEOUT": 0,
             "ERROR": 0,
             "STOPPED": 0,
         }
@@ -94,7 +95,7 @@ class RedeemApp:
         status_frame.pack(fill="x")
 
         self.summary_var = tk.StringVar(
-            value="已兑换 TOTAL: 0 | SUCCESS: 0 | RECAPTCHA: 0 | REDEEMED: 0 | DUPLICATE: 0 | ERROR: 0 | STOPPED: 0"
+            value="已兑换 TOTAL: 0 | SUCCESS: 0 | RECAPTCHA: 0 | DUPLICATE: 0 | FAILED: 0 | TIMEOUT: 0 | ERROR: 0"
         )
         ttk.Label(status_frame, textvariable=self.summary_var).pack(anchor="w")
 
@@ -180,8 +181,9 @@ class RedeemApp:
             f"已兑换 TOTAL: {total} | "
             f"SUCCESS: {self.status_counts['SUCCESS']} | "
             f"RECAPTCHA: {self.status_counts['RECAPTCHA']} | "
-            f"REDEEMED: {self.status_counts['REDEEMED']} | "
             f"DUPLICATE: {self.status_counts['DUPLICATE']} | "
+            f"FAILED: {self.status_counts['FAILED']} | "
+            f"TIMEOUT: {self.status_counts['TIMEOUT']} | "
             f"ERROR: {self.status_counts['ERROR']} | "
             f"STOPPED: {self.status_counts['STOPPED']}"
         )
@@ -279,10 +281,11 @@ class RedeemApp:
 
                 try:
                     status, detail = process_code(code, i, len(codes), region)
-
                     if status != "SUCCESS":
                         screenshot_path = save_debug_screenshot(code, status.lower(), region)
                         detail = f"{detail} | 截图: {screenshot_path}"
+                        pyautogui.press("f5")
+                        time.sleep(ERROR_REFRESH_WAIT)
 
                 except pyautogui.FailSafeException:
                     status = "STOPPED"
@@ -298,7 +301,7 @@ class RedeemApp:
                     screenshot_path = save_debug_screenshot(code, "exception", region)
                     detail = f"脚本异常: {e} | 截图: {screenshot_path}"
                     pyautogui.press("f5")
-                    time.sleep(8.0)
+                    time.sleep(ERROR_REFRESH_WAIT)
 
                 append_result(code, status, detail)
                 self.add_result_row(i, code, status, detail)
@@ -306,13 +309,19 @@ class RedeemApp:
                 if status == "SUCCESS":
                     self.remove_code_from_input(code)
                 else:
+                    if status == "FAILED":
+                        self.remove_code_from_input(code)
+
                     is_new_failed = append_failed_code(code)
                     if is_new_failed:
                         self.log(f"[{i}/{len(codes)}] 已加入 failed_codes.txt: {code}")
                     else:
                         self.log(f"[{i}/{len(codes)}] failed_codes.txt 中已存在: {code}")
                 
-                self.log(f"[{i}/{len(codes)}] 完成: {code} -> {status}")
+                if status == "SUCCESS":
+                    self.log(f"[{i}/{len(codes)}] 已兑换: {code}")
+                else:
+                    self.log(f"[{i}/{len(codes)}] {status}: {code}")
 
                 if self.stop_requested:
                     self.log("收到停止请求，任务结束。")

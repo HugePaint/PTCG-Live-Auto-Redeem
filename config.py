@@ -8,6 +8,9 @@ def get_base_dir() -> Path:
         return Path(sys._MEIPASS)
     return Path(__file__).resolve().parent
 
+VERSION = "0.0.2"
+MAIN_WINDOW_TITLE = f"PTCG Live Auto Redeem v{VERSION}"
+DEBUG_STATUS = 1
 
 BASE_DIR = get_base_dir()
 
@@ -25,9 +28,9 @@ TEMPLATE_PATHS = {
     "redeem_button": TEMPLATE_DIR / "redeem_button.png",
     "success": TEMPLATE_DIR / "success.png",
     "recaptcha": TEMPLATE_DIR / "recaptcha.png",
-    "redeemed": TEMPLATE_DIR / "redeemed.png",
+    "code_success": TEMPLATE_DIR / "code_success.png",
+    "code_fail": TEMPLATE_DIR / "code_fail.png",
     "duplicate": TEMPLATE_DIR / "duplicate.png",
-    "error": TEMPLATE_DIR / "error.png",
 }
 
 INPUT_BOX_IMG = TEMPLATE_PATHS["input_box"]
@@ -36,9 +39,9 @@ REDEEM_BUTTON_IMG = TEMPLATE_PATHS["redeem_button"]
 
 SUCCESS_IMG = TEMPLATE_PATHS["success"]
 RECAPTCHA_IMG = TEMPLATE_PATHS["recaptcha"]
-REDEEMED_IMG = TEMPLATE_PATHS["redeemed"]
+CODE_SUCCESS_IMG = TEMPLATE_PATHS["code_success"]
+CODE_FAIL_IMG = TEMPLATE_PATHS["code_fail"]
 DUPLICATE_IMG = TEMPLATE_PATHS["duplicate"]
-ERROR_IMG = TEMPLATE_PATHS["error"]
 
 # =========================
 # 运行配置
@@ -49,18 +52,20 @@ pyautogui.FAILSAFE = True
 pyautogui.PAUSE = 0.25
 
 START_DELAY = 1.0
-CONFIDENCE = 0.75
-SEARCH_TIMEOUT = 8.0
+CONFIDENCE = 0.9
+SEARCH_TIMEOUT = 3.1
 STATUS_TIMEOUT = 10.0
-STATUS_POLL_INTERVAL = 0.4
+STATUS_POLL_INTERVAL = 3
 
 RANDOM_DELAY_MIN = 0.2
-RANDOM_DELAY_MAX = 1.1
+RANDOM_DELAY_MAX = 0.8
 
 AFTER_CLICK_WAIT = 0.1
 AFTER_PASTE_WAIT = 0.1
 AFTER_SUBMIT_WAIT = 3.0
-AFTER_REDEEM_WAIT = 2.0
+AFTER_REDEEM_WAIT = 3.0
+
+ERROR_REFRESH_WAIT = 8.0
 
 REGION_PADDING_LEFT = 10
 REGION_PADDING_TOP = 120

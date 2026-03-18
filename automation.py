@@ -12,11 +12,12 @@ from config import (
     AFTER_REDEEM_WAIT,
     AFTER_SUBMIT_WAIT,
     CONFIDENCE,
+    DEBUG_STATUS,
     DUPLICATE_IMG,
-    ERROR_IMG,
     INPUT_BOX_IMG,
     RECAPTCHA_IMG,
-    REDEEMED_IMG,
+    CODE_SUCCESS_IMG,
+    CODE_FAIL_IMG,
     REGION_PADDING_BOTTOM,
     REGION_PADDING_LEFT,
     REGION_PADDING_RIGHT,
@@ -88,29 +89,36 @@ def wait_and_locate_center(
 
     start = time.time()
     while time.time() - start < timeout:
-        pos = pyautogui.locateCenterOnScreen(
-            str(image_path),
-            confidence=confidence,
-            grayscale=False,
-            region=region,
-        )
-        if pos is not None:
-            return pos
-        time.sleep(0.3)
-
+        try:
+            pos = pyautogui.locateCenterOnScreen(
+                str(image_path),
+                confidence=confidence,
+                grayscale=False,
+                region=region,
+            )
+            if pos is not None:
+                return pos
+        except pyautogui.ImageNotFoundException:
+            time.sleep(0.5)
+            continue
     raise TimeoutError(f"在区域 {region} 内，{timeout} 秒内未找到: {desc}")
 
 
 def locate_on_screen_optional(image_path: Path, region, confidence: float = CONFIDENCE):
     if not image_path.exists():
         return None
-
-    return pyautogui.locateOnScreen(
-        str(image_path),
-        confidence=confidence,
-        grayscale=False,
-        region=region,
-    )
+    try:
+        result = pyautogui.locateOnScreen(
+            str(image_path),
+            confidence=confidence,
+            grayscale=False,
+            region=region,
+        )
+        if result is not None:
+            return result
+    except pyautogui.ImageNotFoundException:
+        return None
+    return None
 
 def random_delay() -> None:
     """生成一个范围内的随机延迟"""
@@ -119,6 +127,8 @@ def random_delay() -> None:
     return delay
 
 def click_image(image_path: Path, desc: str, region):
+    if DEBUG_STATUS:
+        print(f"正在寻找 {desc}，区域: {region}")
     pos = wait_and_locate_center(image_path, desc, region=region)
     pyautogui.click(pos.x, pos.y)
     random_delay()
@@ -142,31 +152,56 @@ def clear_input_box(region) -> None:
     time.sleep(0.1)
 
 
+def detect_submit_status(region) -> tuple[str, str]:
+    """
+    submit_status: SUBMITTED / RECAPTCHA / DUPLICATE / FAILED / TIMEOUT
+    """
+    start = time.time()
+
+    while time.time() - start < STATUS_TIMEOUT:
+        if locate_on_screen_optional(CODE_SUCCESS_IMG, region):
+            if DEBUG_STATUS:
+                print("detect_submit_status: 匹配到 code_success.png，状态为 SUBMITTED")
+            return "SUBMITTED", "匹配到 CODE_SUCCESS.png"
+        
+        if locate_on_screen_optional(CODE_FAIL_IMG, region):
+            if DEBUG_STATUS:
+                print("detect_submit_status: 匹配到 code_fail.png，状态为 FAILED")
+            return "FAILED", "匹配到 code_fail.png"
+
+        if locate_on_screen_optional(RECAPTCHA_IMG, region):
+            if DEBUG_STATUS:
+                print("detect_submit_status: 匹配到 recaptcha.png，状态为 RECAPTCHA")
+            return "RECAPTCHA", "匹配到 recaptcha.png"
+        
+        if locate_on_screen_optional(DUPLICATE_IMG, region):
+            if DEBUG_STATUS:
+                print("detect_submit_status: 匹配到 duplicate.png，状态为 DUPLICATE")
+            return "DUPLICATE", "匹配到 duplicate.png"
+
+
+        time.sleep(STATUS_POLL_INTERVAL)
+
+    return "TIMEOUT", f"{STATUS_TIMEOUT} 秒内未识别到状态提示"
+
 def detect_redeem_status(region) -> tuple[str, str]:
     """
-    status: SUCCESS / RECAPTCHA / REDEEMED / DUPLICATE / ERROR
+    redeem_status: SUCCESS / TIMEOUT
     """
     start = time.time()
 
     while time.time() - start < STATUS_TIMEOUT:
         if locate_on_screen_optional(SUCCESS_IMG, region):
+            if DEBUG_STATUS:
+                print("detect_redeem_status: 匹配到 success.png，状态为 SUCCESS")
             return "SUCCESS", "匹配到 success.png"
 
-        if locate_on_screen_optional(RECAPTCHA_IMG, region):
-            return "RECAPTCHA", "匹配到 recaptcha.png"
-
-        if locate_on_screen_optional(REDEEMED_IMG, region):
-            return "REDEEMED", "匹配到 redeemed.png"
-
-        if locate_on_screen_optional(DUPLICATE_IMG, region):
-            return "DUPLICATE", "匹配到 duplicate.png"
-
-        if locate_on_screen_optional(ERROR_IMG, region):
-            return "ERROR", "匹配到 error.png"
+        # if locate_on_screen_optional(ERROR_IMG, region):
+        #     return "ERROR", "匹配到 error.png"
 
         time.sleep(STATUS_POLL_INTERVAL)
 
-    return "ERROR", f"{STATUS_TIMEOUT} 秒内未识别到状态提示"
+    return "TIMEOUT", f"{STATUS_TIMEOUT} 秒内未识别到状态提示"
 
 
 def process_code(code: str, index: int, total: int, region) -> tuple[str, str]:
@@ -178,14 +213,14 @@ def process_code(code: str, index: int, total: int, region) -> tuple[str, str]:
 
     click_image(SUBMIT_BUTTON_IMG, "SUBMIT CODE", region)
     time.sleep(AFTER_SUBMIT_WAIT)
+    status, detail = detect_submit_status(region)
 
+    if status != "SUBMITTED":
+        return status, detail
+    
     click_image(REDEEM_BUTTON_IMG, "REDEEM", region)
     time.sleep(AFTER_REDEEM_WAIT)
 
     status, detail = detect_redeem_status(region)
-
-    if status == "RECAPTCHA":
-        pyautogui.press("f5")
-        time.sleep(3.0)
 
     return status, detail
